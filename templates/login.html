@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AGRO NUTS 2026 — Login</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#0f2942 0%,#1F4E79 50%,#2E75B6 100%);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-wrap{width:100%;max-width:420px;padding:24px}
+.login-card{background:#fff;border-radius:20px;padding:40px 36px;box-shadow:0 24px 64px rgba(0,0,0,0.3)}
+.logo{text-align:center;margin-bottom:32px}
+.logo .icon{font-size:48px;margin-bottom:8px}
+.logo h1{font-size:22px;font-weight:800;color:#1F4E79;letter-spacing:1px}
+.logo p{font-size:13px;color:#888;margin-top:4px}
+.form-group{margin-bottom:16px}
+label{display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+input{width:100%;padding:12px 14px;border:1.5px solid #e0e6ef;border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:border .15s;background:#fafbfd}
+input:focus{border-color:#2E75B6;background:#fff}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,#1F4E79,#2E75B6);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px;transition:opacity .15s}
+.btn-login:hover{opacity:.9}
+.error{background:#fde8e8;color:#c0392b;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+.creds{background:#EBF3FB;border-radius:10px;padding:14px;margin-top:20px;font-size:12px;color:#555}
+.creds p{margin-bottom:4px}.creds strong{color:#1F4E79}
+.badge-role{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-admin{background:#fde8e8;color:#c0392b}
+.badge-viewer{background:#d4edda;color:#155724}
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="logo">
+      <div class="icon">🌱</div>
+      <h1>AGRO NUTS 2026</h1>
+      <p>Warehouse Management System</p>
+    </div>
+    <div class="error" id="err"></div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="Enter username" autofocus>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Sign In →</button>
+    <div class="creds">
+    </div>
+  </div>
+</div>
+<script>
+async function doLogin(){
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const err = document.getElementById('err');
+  err.style.display='none';
+  if(!username||!password){err.textContent='Enter username and password';err.style.display='block';return;}
+  const r = await fetch('/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+  const d = await r.json();
+  if(d.success) window.location.href='/';
+  else{err.textContent=d.error||'Login failed';err.style.display='block';}
+}
+</script>
+</body>
+</html>

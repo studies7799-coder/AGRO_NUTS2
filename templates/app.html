@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<title>AGRO NUTS 2026</title>
+<style>
+/* ── Reset & Base ── */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#F0F4F8;color:#1a1a2e;min-height:100vh;overflow-x:hidden}
+
+/* ── Mobile-first layout ── */
+.app-layout{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+#sidebar{width:230px;background:#0f2942;color:#fff;display:flex;flex-direction:column;flex-shrink:0;transition:transform .25s ease;z-index:200}
+.sb-logo{padding:18px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo h1{font-size:15px;font-weight:800;letter-spacing:.5px}
+.sb-logo p{font-size:10px;color:#6B8FAF;margin-top:2px}
+.sb-user{display:flex;align-items:center;gap:9px;padding:10px 12px;background:rgba(255,255,255,.05);margin:10px 10px 0;border-radius:10px}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.av-admin{background:#e74c3c;color:#fff}.av-viewer{background:#27ae60;color:#fff}
+.sb-uinfo .un{font-size:12px;font-weight:600}.sb-uinfo .ur{font-size:10px;color:#6B8FAF}
+nav{flex:1;padding:8px 6px;overflow-y:auto}
+.ns{font-size:10px;color:#4a6a8a;font-weight:700;letter-spacing:1px;padding:10px 12px 4px;text-transform:uppercase}
+.nb{display:flex;align-items:center;gap:9px;width:100%;padding:9px 12px;border:none;background:transparent;color:#8aaccc;font-size:13px;font-family:inherit;border-radius:8px;cursor:pointer;transition:all .15s;text-align:left;margin-bottom:2px}
+.nb:hover{background:rgba(255,255,255,.08);color:#fff}
+.nb.active{background:#1F4E79;color:#fff;font-weight:600}
+.nb .ic{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.sb-foot{padding:12px 16px;border-top:1px solid rgba(255,255,255,.06)}
+.logout-btn{display:flex;align-items:center;gap:8px;color:#6B8FAF;font-size:12px;cursor:pointer;background:none;border:none;font-family:inherit}
+.logout-btn:hover{color:#fff}
+
+/* ── Mobile sidebar overlay ── */
+.sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:199}
+.sb-backdrop.show{display:block}
+
+/* ── Main ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#topbar{background:#fff;padding:0 16px;height:52px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;flex-shrink:0;gap:8px}
+#topbar h2{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.ta{display:flex;gap:6px;flex-wrap:nowrap;flex-shrink:0}
+.menu-btn{display:none;background:none;border:none;font-size:20px;cursor:pointer;color:#555;padding:4px 6px}
+#content{flex:1;overflow-y:auto;padding:14px 16px;-webkit-overflow-scrolling:touch}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:14px 16px;margin-bottom:12px}
+.ct{font-size:13px;font-weight:700;color:#444;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+
+/* ── Summary grid ── */
+.sg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.sc{background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px 14px}
+.sc .sl{font-size:10px;color:#999;margin-bottom:4px}
+.sc .sv{font-size:17px;font-weight:800}
+.c-alloc .sv{color:#1F4E79}.c-used .sv{color:#c0392b}.c-balance .sv{color:#27ae60}
+.c-trucks .sv{color:#8e44ad}.c-sold .sv{color:#e67e22}.c-kept .sv{color:#2980b9}
+
+/* ── Tables ── */
+.tw{overflow-x:auto;border-radius:8px;border:1px solid #e8edf4;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:400px}
+thead th{background:#1F4E79;color:#fff;padding:9px 10px;text-align:left;font-weight:600;white-space:nowrap;font-size:11px}
+tbody tr:nth-child(even){background:#f5f8fc}
+tbody tr:hover{background:#dbeafe}
+tbody td{padding:7px 10px;border-bottom:1px solid #f0f0f0;white-space:nowrap;font-size:12px}
+.alloc-tbl thead th{background:#27AE60}
+.alloc-tbl tbody tr:nth-child(even){background:#f0faf4}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* ── Status tags ── */
+.st{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700}
+.tag-sold{background:#fde8e8;color:#c0392b}.tag-kept{background:#d4edda;color:#155724}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700}
+.b-ok{background:#d4edda;color:#155724}.b-low{background:#fff3cd;color:#856404}
+.b-critical,.b-over{background:#f8d7da;color:#721c24}
+.b-admin{background:#fde8e8;color:#c0392b}.b-viewer{background:#d4edda;color:#155724}
+
+/* ── Forms ── */
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.3px}
+.fg .opt{font-size:10px;color:#aaa;font-weight:400;text-transform:none;letter-spacing:0}
+input,select,textarea{padding:9px 11px;border:1.5px solid #d8e0ec;border-radius:8px;font-size:14px;font-family:inherit;outline:none;transition:border .15s;background:#fafbfd;width:100%;-webkit-appearance:none}
+input:focus,select:focus{border-color:#2E75B6;background:#fff}
+input[readonly]{background:#f0f4f8;color:#888}
+input[type=checkbox]{width:20px;height:20px;accent-color:#e74c3c;flex-shrink:0}
+
+/* ── Form sections ── */
+.section-divider{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 4px}
+.section-divider span{font-size:11px;font-weight:700;color:#2E75B6;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+.sold-section{grid-column:1/-1;background:#FFF5F5;border:1.5px solid #F5C0C0;border-radius:9px;padding:12px;display:none}
+.sold-section.show{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.amt-box{grid-column:1/-1;background:#EBF3FB;border:1.5px solid #2E75B6;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.amt-box .al{font-size:12px;color:#555;font-weight:600}
+.amt-box .av{font-size:16px;font-weight:800;color:#1F4E79}
+
+/* ── Buttons ── */
+.btn{padding:8px 14px;border:none;border-radius:8px;font-size:13px;font-family:inherit;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.btn-primary{background:#2E75B6;color:#fff}.btn-primary:hover{background:#1F4E79}
+.btn-success{background:#27ae60;color:#fff}.btn-success:active{background:#1e8449}
+.btn-danger{background:#e74c3c;color:#fff}.btn-danger:active{background:#c0392b}
+.btn-warning{background:#f39c12;color:#fff}.btn-warning:active{background:#e67e22}
+.btn-alloc{background:#27ae60;color:#fff}
+.btn-secondary{background:#f0f4f8;color:#333;border:1px solid #d0d7e3}
+.btn-secondary:active{background:#e2e8f0}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:7px}
+.btn-xs{padding:4px 9px;font-size:11px;border-radius:6px}
+
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(10,25,45,.55);display:flex;align-items:flex-end;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:100%;max-height:92vh;overflow-y:auto;transform:translateY(30px);transition:transform .25s;-webkit-overflow-scrolling:touch}
+.overlay.open .modal{transform:translateY(0)}
+.modal h3{font-size:15px;font-weight:700;color:#1F4E79;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.mf{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0;flex-wrap:wrap}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 14px}
+
+/* ── Filter bar ── */
+.fb{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.fb select,.fb input{min-width:120px;flex:1;padding:8px 10px;font-size:13px}
+
+/* ── Progress ── */
+.pw{background:#e9ecef;border-radius:99px;height:5px;margin-top:4px;overflow:hidden}
+.pb{height:100%;border-radius:99px;transition:width .4s}
+.pb-ok{background:#27ae60}.pb-low{background:#f39c12}.pb-critical,.pb-over{background:#e74c3c}
+
+/* ── Allocation timeline ── */
+.alloc-timeline{display:flex;flex-direction:column}
+.alloc-item{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.alloc-item:last-child{border-bottom:none}
+.alloc-dot{width:34px;height:34px;background:#d4edda;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.alloc-body{flex:1;min-width:0}
+.alloc-date{font-size:11px;color:#888}
+.alloc-amount{font-size:15px;font-weight:800;color:#27ae60}
+.alloc-notes{font-size:12px;color:#777;margin-top:2px;word-break:break-word}
+.alloc-running{font-size:10px;color:#aaa;margin-top:2px}
+
+/* ── Tracker grid ── */
+.tg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.tc{background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:12px 14px}
+.tc h4{font-size:12px;font-weight:700;color:#1F4E79;margin-bottom:8px;border-bottom:1px solid #f0f0f0;padding-bottom:6px}
+.tr-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #f9f9f9}
+.tr-row:last-child{border-bottom:none}
+.tl{color:#777}.tv{font-weight:700}
+
+/* ── Delete danger box ── */
+.danger-box{background:#FFF5F5;border:1.5px solid #F5C0C0;border-radius:9px;padding:12px 14px;margin:12px 0;font-size:13px;color:#c0392b}
+.danger-box strong{display:block;margin-bottom:4px}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:#0f2942;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{background:#e74c3c}
+#toast.ok{background:#27ae60}
+
+.vn{background:#FFF8E1;border:1px solid #F5C842;border-radius:8px;padding:10px 12px;font-size:12px;color:#7d5a00;margin-bottom:12px}
+.loading{text-align:center;padding:32px;color:#aaa;font-size:14px}
+
+/* ── Responsive breakpoints ── */
+@media(min-width:768px){
+  .menu-btn{display:none !important}
+  .sg{grid-template-columns:repeat(4,1fr)}
+  .modal{border-radius:16px;max-width:680px;align-self:center;max-height:90vh}
+  .overlay{align-items:center}
+  #content{padding:18px 22px}
+  #topbar{padding:0 22px;height:54px}
+  #topbar h2{font-size:16px}
+}
+
+@media(max-width:767px){
+  #sidebar{position:fixed;top:0;left:0;height:100%;transform:translateX(-100%);width:260px}
+  #sidebar.open{transform:translateX(0)}
+  .menu-btn{display:flex !important;align-items:center;justify-content:center}
+  .sg{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+  .form-grid .fg.full{grid-column:1}
+  .section-divider{grid-column:1}
+  .sold-section{grid-column:1}
+  .sold-section.show{grid-template-columns:1fr}
+  .amt-box{grid-column:1}
+  .mf{flex-direction:column-reverse}
+  .mf .btn{width:100%;justify-content:center}
+  .ta .btn-sm{padding:5px 9px;font-size:11px}
+}
+</style>
+</head>
+<body>
+<div class="app-layout">
+
+<!-- Mobile backdrop -->
+<div class="sb-backdrop" id="sb-backdrop" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div class="sb-logo"><h1>🌱 AGRO NUTS</h1><p>2026 Management System</p></div>
+  <div class="sb-user">
+    <div class="av" id="sb-av">A</div>
+    <div class="sb-uinfo"><div class="un" id="sb-un">—</div><div class="ur" id="sb-ur">—</div></div>
+  </div>
+  <nav>
+    <div class="ns">Overview</div>
+    <button class="nb active" id="nav-dashboard" onclick="go('dashboard')"><span class="ic">📊</span>Dashboard</button>
+    <div class="ns">Warehouse</div>
+    <button class="nb" id="nav-entry" onclick="go('entry')"><span class="ic">📦</span>Add Entry</button>
+    <button class="nb" id="nav-deliveries" onclick="go('deliveries')"><span class="ic">📋</span>All Deliveries</button>
+    <button class="nb" id="nav-sold" onclick="go('sold')"><span class="ic">🏷️</span>Sold Tracker</button>
+    <div class="ns">Finance</div>
+    <button class="nb" id="nav-allocations" onclick="go('allocations')"><span class="ic">💰</span>Allocations</button>
+    <div class="ns">Management</div>
+    <button class="nb" id="nav-suppliers" onclick="go('suppliers')"><span class="ic">👥</span>Suppliers</button>
+    <button class="nb admin-only" id="nav-users" onclick="go('users')" style="display:none"><span class="ic">🔐</span>Users</button>
+  </nav>
+  <div class="sb-foot"><button class="logout-btn" onclick="window.location='/logout'">🚪 Sign Out</button></div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <button class="menu-btn" onclick="openSidebar()">☰</button>
+    <h2 id="page-title">Dashboard</h2>
+    <div class="ta" id="top-actions"></div>
+  </div>
+  <div id="content"><div class="loading">⏳ Loading...</div></div>
+</div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay"><div class="modal" id="mbody"></div></div>
+<div id="toast"></div>
+
+<script>
+let ROLE='{{ role }}',USERNAME='{{ username }}';
+
+window.onload=()=>{
+  document.getElementById('sb-un').textContent=USERNAME;
+  document.getElementById('sb-ur').textContent=ROLE.charAt(0).toUpperCase()+ROLE.slice(1);
+  document.getElementById('sb-av').textContent=USERNAME.charAt(0).toUpperCase();
+  document.getElementById('sb-av').className='av '+(ROLE==='admin'?'av-admin':'av-viewer');
+  if(ROLE==='admin') document.querySelectorAll('.admin-only').forEach(e=>e.style.display='flex');
+  go('dashboard');
+};
+
+// ── Sidebar mobile ────────────────────────────────────────────────────────────
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sb-backdrop').classList.add('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-backdrop').classList.remove('show');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmt=n=>n==null?'—':Math.round(n).toLocaleString();
+const fmtN=n=>n?Number(n).toLocaleString():'—';
+const today=()=>new Date().toLocaleDateString('en-GB').split('/').join('-');
+
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className=`show ${type}`;
+  setTimeout(()=>t.className='',3200);
+}
+function openModal(html){
+  document.getElementById('mbody').innerHTML=html;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('mbody').scrollTop=0;
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
+
+async function api(path,opts={}){
+  const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opts});
+  if(r.status===401){window.location='/';return null;}
+  return r.json();
+}
+
+function statusBadge(s){
+  const m={OK:'b-ok',LOW:'b-low',CRITICAL:'b-critical','OVER BUDGET':'b-over'};
+  const ic={OK:'🟢',LOW:'🟡',CRITICAL:'🔴','OVER BUDGET':'⚠️'};
+  return `<span class="badge ${m[s]||'b-ok'}">${ic[s]||''} ${s}</span>`;
+}
+
+function go(page){
+  closeSidebar();
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('nav-'+page);if(btn) btn.classList.add('active');
+  const titles={dashboard:'Dashboard',entry:'Add Entry',deliveries:'All Deliveries',
+                sold:'Sold Tracker',allocations:'Allocations',suppliers:'Suppliers',users:'Users'};
+  document.getElementById('page-title').textContent=titles[page]||'';
+  document.getElementById('top-actions').innerHTML='';
+  document.getElementById('content').innerHTML='<div class="loading">⏳ Loading...</div>';
+  ({dashboard:renderDashboard,entry:renderEntry,deliveries:renderDeliveries,
+    sold:renderSold,allocations:renderAllocations,suppliers:renderSuppliers,
+    users:renderUsers}[page]||renderDashboard)();
+}
+
+function exportBtns(){
+  document.getElementById('top-actions').innerHTML=`
+    <button class="btn btn-secondary btn-sm" onclick="window.open('/api/export/csv','_blank')">⬇CSV</button>
+    <button class="btn btn-secondary btn-sm" onclick="window.open('/api/export/excel','_blank')">⬇XLS</button>
+    <button class="btn btn-secondary btn-sm" onclick="window.open('/api/export/json','_blank')">⬇JSON</button>`;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+async function renderDashboard(){
+  exportBtns();
+  const d=await api('/api/dashboard');if(!d) return;
+  const t=d.totals,total=t.deliveries+t.sold_out;
+  const sp=total>0?(t.sold_out/total*100).toFixed(1):0;
+  const supRows=d.suppliers.map(s=>{
+    const pct=s.total_allocated>0?(s.used/s.total_allocated*100):0;
+    const pbC=s.status==='OK'?'pb-ok':s.status==='LOW'?'pb-low':'pb-critical';
+    return `<tr onclick="viewSupplier(${s.id},'${s.name.replace(/'/g,"\\'")}')" style="cursor:pointer">
+      <td><strong>${s.name}</strong></td>
+      <td class="num">${fmt(s.total_allocated)}</td>
+      <td class="num">${fmt(s.used)}</td>
+      <td class="num" style="color:${s.balance>=0?'#27ae60':'#e74c3c'};font-weight:700">${fmt(s.balance)}</td>
+      <td>${s.count_in}/${s.count_out}</td>
+      <td>${statusBadge(s.status)}<div class="pw"><div class="pb ${pbC}" style="width:${Math.min(pct,100)}%"></div></div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('content').innerHTML=`
+    <div class="sg">
+      <div class="sc c-alloc"><div class="sl">💰 Total Allocated</div><div class="sv">${fmt(t.total_allocated)}</div></div>
+      <div class="sc c-used"><div class="sl">📤 Used</div><div class="sv">${fmt(t.used)}</div></div>
+      <div class="sc c-balance"><div class="sl">✅ Balance</div><div class="sv">${fmt(t.balance)}</div></div>
+      <div class="sc c-trucks"><div class="sl">🚛 Trucks</div><div class="sv">${total}</div></div>
+      <div class="sc c-kept"><div class="sl">🏠 Kept</div><div class="sv">${t.deliveries}</div></div>
+      <div class="sc c-sold"><div class="sl">🏷️ Sold Out</div><div class="sv">${t.sold_out}</div></div>
+      <div class="sc c-sold"><div class="sl">💵 Sold Rev.</div><div class="sv">${fmt(t.sold_amount)}</div></div>
+      <div class="sc c-trucks"><div class="sl">📊 % Sold</div><div class="sv">${sp}%</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">👥 Suppliers <span style="font-size:10px;color:#aaa;font-weight:400">tap to view</span>
+        ${ROLE==='admin'?`<button class="btn btn-alloc btn-sm" onclick="go('allocations')">💰 Allocate</button>`:''}
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>Supplier</th><th>Allocated</th><th>Used</th><th>Balance</th><th>K/S</th><th>Status</th></tr></thead>
+        <tbody>${supRows}</tbody>
+      </table></div>
+    </div>`;
+}
+
+// ── ENTRY FORM (shared Add + Edit) ────────────────────────────────────────────
+function buildEntryForm(suppliers,p={},isEdit=false){
+  const supOpts=suppliers.map(s=>`<option value="${s.id}" ${p.supplier_id==s.id?'selected':''}>${s.name}</option>`).join('');
+  const sold=p.sold_outside?'checked':'';const soldShow=p.sold_outside?'show':'';
+  return `<div class="form-grid">
+    <div class="section-divider"><span>📦 Core Details</span></div>
+    <div class="fg"><label>Date</label><input id="f-date" value="${p.date||today()}"></div>
+    <div class="fg"><label>Truck Number *</label><input id="f-truck" value="${p.truck||''}" placeholder="e.g. RGB 7793 cd"></div>
+    <div class="fg"><label>Bags</label><input type="number" id="f-bags" value="${p.bags||''}" placeholder="350"></div>
+    <div class="fg"><label>Gross Weight</label><input type="number" id="f-gross" value="${p.gross_weight||''}" placeholder="28500"></div>
+    <div class="fg"><label>Net Weight *</label><input type="number" id="f-net" value="${p.net_weight||''}" placeholder="28150" oninput="calcAmt()"></div>
+    <div class="fg"><label>Price (per kg) *</label><input type="number" id="f-price" value="${p.price||''}" placeholder="515" oninput="calcAmt()"></div>
+    <div class="fg full"><label>Supplier *</label><select id="f-sup">${supOpts}</select></div>
+
+    <div class="section-divider"><span>📊 Optional Measurements</span></div>
+    <div class="fg"><label>LBS <span class="opt">(optional)</span></label><input type="number" id="f-lbs" value="${p.lbs||''}" placeholder="—"></div>
+    <div class="fg"><label>Bags After Dry <span class="opt">(optional)</span></label><input type="number" id="f-bad" value="${p.bags_after_dry||''}" placeholder="—"></div>
+    <div class="fg"><label>Quality After Dry <span class="opt">(optional)</span></label><input id="f-qad" value="${p.quality_after_dry||''}" placeholder="e.g. Grade A"></div>
+    <div class="fg"><label>Count of Cashew <span class="opt">(optional)</span></label><input type="number" id="f-cc" value="${p.count_cashew||''}" placeholder="—"></div>
+    <div class="fg"><label>F/D <span class="opt">(optional)</span></label><input id="f-fd" value="${p.fd||''}" placeholder="—"></div>
+    <div class="fg"><label>GK <span class="opt">(optional)</span></label><input id="f-gk" value="${p.gk||''}" placeholder="—"></div>
+
+    <div class="section-divider"><span>🏷️ Sold Status</span></div>
+    <div class="fg full" style="flex-direction:row;align-items:center;gap:10px;padding:6px 0">
+      <input type="checkbox" id="f-sold" ${sold} onchange="toggleSoldSec()">
+      <label for="f-sold" style="font-size:13px;font-weight:700;color:#c0392b;text-transform:none;letter-spacing:0;cursor:pointer">🏷️ Mark as SOLD OUTSIDE</label>
+    </div>
+    <div class="sold-section ${soldShow}" id="sold-sec">
+      <div class="fg"><label>Sold Price (per kg)</label><input type="number" id="f-sp" value="${p.sold_price||''}" oninput="calcAmt()"></div>
+      <div class="fg"><label>Sold Amount (auto)</label><input id="f-sa" readonly placeholder="Auto"></div>
+    </div>
+    <div class="fg full"><label>Notes <span class="opt">(optional)</span></label><input id="f-notes" value="${p.notes||''}" placeholder="Any notes..."></div>
+    <div class="amt-box full">
+      <span class="al">💰 Warehouse Amount:</span><span class="av" id="amt-d">—</span>
+      <span class="al" id="sa-lbl" style="${p.sold_outside?'':'display:none'}">🏷️ Sold:</span>
+      <span class="av" id="sa-d" style="color:#e74c3c;${p.sold_outside?'':'display:none'}">—</span>
+    </div>
+  </div>`;
+}
+
+function toggleSoldSec(){
+  const on=document.getElementById('f-sold')?.checked;
+  document.getElementById('sold-sec')?.classList.toggle('show',on);
+  const lbl=document.getElementById('sa-lbl'),val=document.getElementById('sa-d');
+  if(lbl) lbl.style.display=on?'':'none';
+  if(val) val.style.display=on?'':'none';
+  calcAmt();
+}
+
+function calcAmt(){
+  const net=parseFloat(document.getElementById('f-net')?.value)||0;
+  const price=parseFloat(document.getElementById('f-price')?.value)||0;
+  const sp=parseFloat(document.getElementById('f-sp')?.value)||0;
+  const d=document.getElementById('amt-d'),sa=document.getElementById('f-sa'),sd=document.getElementById('sa-d');
+  if(d) d.textContent=net*price>0?fmt(net*price):'—';
+  if(sa) sa.value=net*sp>0?fmt(net*sp):'';
+  if(sd) sd.textContent=net*sp>0?fmt(net*sp):'—';
+}
+
+function collectEntry(){
+  const g=id=>document.getElementById(id)?.value;
+  const sold=document.getElementById('f-sold')?.checked;
+  return{date:g('f-date'),truck:g('f-truck'),bags:g('f-bags'),gross_weight:g('f-gross'),
+    net_weight:g('f-net'),price:g('f-price'),supplier_id:g('f-sup'),
+    lbs:g('f-lbs'),bags_after_dry:g('f-bad'),quality_after_dry:g('f-qad'),
+    count_cashew:g('f-cc'),fd:g('f-fd'),gk:g('f-gk'),
+    sold_outside:sold,sold_price:sold?g('f-sp'):0,notes:g('f-notes')};
+}
+
+async function renderEntry(){
+  if(ROLE!=='admin'){document.getElementById('content').innerHTML='<div class="vn">🔒 Admin access required.</div>';return;}
+  const suppliers=await api('/api/suppliers');if(!suppliers) return;
+  document.getElementById('content').innerHTML=`
+    <div class="card">
+      <div class="ct">📦 New Delivery Entry</div>
+      ${buildEntryForm(suppliers)}
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button class="btn btn-success" style="flex:1" onclick="submitEntry()">✅ Save Entry</button>
+        <button class="btn btn-secondary" onclick="go('entry')">🔄</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">🕐 Recent Entries</div>
+      <div id="recent-tbl"><div class="loading">Loading...</div></div>
+    </div>`;
+  calcAmt();loadRecent();
+}
+
+async function submitEntry(){
+  const body=collectEntry();
+  if(!body.truck||!body.net_weight||!body.price||!body.supplier_id){toast('Fill Truck, Net Weight, Price & Supplier','err');return;}
+  const r=await api('/api/deliveries',{method:'POST',body:JSON.stringify(body)});
+  if(r?.success){toast(`✅ Saved! Amount: ${fmt(r.amount)}`,'ok');go('entry');}
+  else toast('Error saving','err');
+}
+
+async function loadRecent(){
+  const rows=await api('/api/deliveries');if(!rows) return;
+  const el=document.getElementById('recent-tbl');if(!el) return;
+  const recent=rows.slice(0,8);
+  if(!recent.length){el.innerHTML='<p style="color:#aaa;font-size:13px">No entries yet.</p>';return;}
+  el.innerHTML=`<div class="tw"><table>
+    <thead><tr><th>Date</th><th>Truck</th><th>Net Wt</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+    <tbody>${recent.map(e=>`<tr>
+      <td>${e.date}</td><td>${e.truck}</td>
+      <td class="num">${fmt(e.net_weight)}</td>
+      <td class="num"><strong>${fmt(e.amount)}</strong></td>
+      <td>${e.sold_outside?'<span class="st tag-sold">🏷</span>':'<span class="st tag-kept">🏠</span>'}</td>
+      <td><button class="btn btn-warning btn-xs" onclick="openEditModal(${e.id})">✏️</button></td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+// ── EDIT MODAL ────────────────────────────────────────────────────────────────
+async function openEditModal(id){
+  if(ROLE!=='admin'){toast('Admin only','err');return;}
+  const [entry,suppliers]=await Promise.all([api(`/api/deliveries/${id}`),api('/api/suppliers')]);
+  if(!entry||!suppliers) return;
+  openModal(`<h3>✏️ Edit — ${entry.truck}</h3>
+    ${buildEntryForm(suppliers,entry,true)}
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="if(confirm('Delete this entry?'))deleteEntry(${id})">🗑 Delete</button>
+      <button class="btn btn-success" onclick="saveEdit(${id})">💾 Save</button>
+    </div>`);
+  calcAmt();
+}
+
+async function saveEdit(id){
+  const body=collectEntry();
+  if(!body.truck||!body.net_weight||!body.price||!body.supplier_id){toast('Fill required fields','err');return;}
+  const r=await api(`/api/deliveries/${id}`,{method:'PUT',body:JSON.stringify(body)});
+  if(r?.success){toast('✅ Updated','ok');closeModal();if(document.getElementById('del-table'))loadDeliveryTable();}
+  else toast('Error','err');
+}
+
+async function deleteEntry(id){
+  const r=await api(`/api/deliveries/${id}`,{method:'DELETE'});
+  if(r?.success){toast('Deleted','ok');closeModal();
+    if(document.getElementById('del-table'))loadDeliveryTable();
+    else loadRecent();}
+}
+
+// ── ALL DELIVERIES ────────────────────────────────────────────────────────────
+async function renderDeliveries(){
+  exportBtns();
+  const suppliers=await api('/api/suppliers');if(!suppliers) return;
+  const supOpts=`<option value="">All Suppliers</option>`+suppliers.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('content').innerHTML=`
+    <div class="fb">
+      <select id="f-sid">${supOpts}</select>
+      <select id="f-sold-f"><option value="">All</option><option value="0">🏠 Kept</option><option value="1">🏷️ Sold</option></select>
+      <input id="f-search" placeholder="Search...">
+      <button class="btn btn-primary btn-sm" onclick="loadDeliveryTable()">🔍</button>
+      ${ROLE==='admin'?'<button class="btn btn-success btn-sm" onclick="go(\'entry\')">➕</button>':''}
+    </div>
+    <div id="del-table"><div class="loading">⏳</div></div>
+    <div id="del-sum" style="text-align:right;font-size:11px;color:#555;margin-top:6px"></div>`;
+  loadDeliveryTable();
+}
+
+async function loadDeliveryTable(){
+  const sid=document.getElementById('f-sid')?.value;
+  const sold=document.getElementById('f-sold-f')?.value;
+  const search=document.getElementById('f-search')?.value;
+  let url='/api/deliveries?x=1';
+  if(sid) url+=`&supplier_id=${sid}`;
+  if(sold!==undefined&&sold!=='') url+=`&sold=${sold}`;
+  if(search) url+=`&search=${encodeURIComponent(search)}`;
+  const rows=await api(url);if(!rows) return;
+  const el=document.getElementById('del-table');if(!el) return;
+  if(!rows.length){el.innerHTML='<div class="card"><p style="color:#aaa;text-align:center;padding:20px">No results.</p></div>';return;}
+  const total=rows.reduce((a,r)=>a+(r.amount||0),0);
+  el.innerHTML=`<div class="tw"><table>
+    <thead><tr><th>#</th><th>Date</th><th>Truck</th><th>Bags</th><th>Gross</th><th>Net</th>
+    <th>LBS</th><th>Bags Dry</th><th>Quality</th><th>Count</th><th>F/D</th><th>GK</th>
+    <th>Price</th><th>Amount</th><th>Status</th><th>Sold Pr</th><th>Sold Amt</th>
+    <th>Supplier</th><th>Notes</th>${ROLE==='admin'?'<th></th>':''}</tr></thead>
+    <tbody>${rows.map((r,i)=>`<tr>
+      <td style="color:#bbb">${i+1}</td><td>${r.date}</td><td><strong>${r.truck}</strong></td>
+      <td class="num">${r.bags||'—'}</td><td class="num">${fmtN(r.gross_weight)}</td><td class="num">${fmtN(r.net_weight)}</td>
+      <td class="num">${r.lbs||'—'}</td><td class="num">${r.bags_after_dry||'—'}</td>
+      <td>${r.quality_after_dry||'—'}</td><td class="num">${r.count_cashew||'—'}</td>
+      <td>${r.fd||'—'}</td><td>${r.gk||'—'}</td>
+      <td class="num">${fmtN(r.price)}</td><td class="num"><strong>${fmtN(r.amount)}</strong></td>
+      <td>${r.sold_outside?'<span class="st tag-sold">🏷 Sold</span>':'<span class="st tag-kept">🏠 Kept</span>'}</td>
+      <td class="num">${r.sold_outside?fmtN(r.sold_price):'—'}</td>
+      <td class="num">${r.sold_outside?fmtN(r.sold_amount):'—'}</td>
+      <td>${r.supplier_name}</td>
+      <td style="color:#888;max-width:100px;overflow:hidden;text-overflow:ellipsis">${r.notes||''}</td>
+      ${ROLE==='admin'?`<td><button class="btn btn-warning btn-xs" onclick="openEditModal(${r.id})">✏️</button></td>`:''}
+    </tr>`).join('')}</tbody></table></div>`;
+  document.getElementById('del-sum').innerHTML=`<strong>${rows.length}</strong> trucks · Total: <strong>${fmt(total)}</strong>`;
+}
+
+// ── SOLD TRACKER ──────────────────────────────────────────────────────────────
+async function renderSold(){
+  exportBtns();
+  const [summary,allSold]=await Promise.all([api('/api/sold-summary'),api('/api/deliveries?sold=1')]);
+  if(!summary) return;
+  const tTr=summary.reduce((a,s)=>a+s.total,0),tSold=summary.reduce((a,s)=>a+s.sold_out,0);
+  const tKept=summary.reduce((a,s)=>a+s.kept,0),tRev=summary.reduce((a,s)=>a+s.sold_revenue,0);
+  const cards=summary.map(s=>{
+    const sp=s.total>0?(s.sold_out/s.total*100).toFixed(0):0;
+    return `<div class="tc"><h4>${s.name}</h4>
+      <div class="tr-row"><span class="tl">🚛 Total</span><span class="tv">${s.total}</span></div>
+      <div class="tr-row"><span class="tl">🏠 Kept</span><span class="tv" style="color:#27ae60">${s.kept}</span></div>
+      <div class="tr-row"><span class="tl">🏷️ Sold</span><span class="tv" style="color:#e74c3c">${s.sold_out} (${sp}%)</span></div>
+      <div class="tr-row"><span class="tl">⚖️ Net Wt</span><span class="tv">${fmt(s.total_weight)} kg</span></div>
+      <div class="tr-row"><span class="tl">💵 Revenue</span><span class="tv" style="color:#e74c3c">${fmt(s.sold_revenue)}</span></div>
+      <div class="pw" style="margin-top:8px"><div class="pb" style="width:${sp}%;background:#e74c3c"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('content').innerHTML=`
+    <div class="sg">
+      <div class="sc c-trucks"><div class="sl">🚛 Total</div><div class="sv">${tTr}</div></div>
+      <div class="sc c-kept"><div class="sl">🏠 Kept</div><div class="sv">${tKept}</div></div>
+      <div class="sc c-sold"><div class="sl">🏷️ Sold</div><div class="sv">${tSold}</div></div>
+      <div class="sc c-sold"><div class="sl">💵 Revenue</div><div class="sv">${fmt(tRev)}</div></div>
+    </div>
+    <div class="card"><div class="ct">📊 By Supplier</div><div class="tg">${cards}</div></div>
+    <div class="card">
+      <div class="ct">🏷️ Sold Outside <span class="badge b-over" style="margin-left:4px">${tSold}</span></div>
+      <div class="tw"><table>
+        <thead><tr><th>Date</th><th>Truck</th><th>Bags</th><th>Net Wt</th><th>WH Pr</th><th>Sold Pr</th><th>Revenue</th><th>Supplier</th>${ROLE==='admin'?'<th></th>':''}</tr></thead>
+        <tbody>${allSold.map(r=>`<tr>
+          <td>${r.date}</td><td><strong>${r.truck}</strong></td><td class="num">${r.bags||'—'}</td>
+          <td class="num">${fmtN(r.net_weight)}</td><td class="num">${fmtN(r.price)}</td>
+          <td class="num">${fmtN(r.sold_price)}</td>
+          <td class="num"><strong style="color:#e74c3c">${fmtN(r.sold_amount)}</strong></td>
+          <td>${r.supplier_name}</td>
+          ${ROLE==='admin'?`<td><button class="btn btn-warning btn-xs" onclick="openEditModal(${r.id})">✏️</button></td>`:''}
+        </tr>`).join('')||'<tr><td colspan="9" style="text-align:center;color:#aaa;padding:14px">No trucks sold outside yet</td></tr>'}</tbody>
+      </table></div>
+    </div>`;
+}
+
+// ── ALLOCATIONS ───────────────────────────────────────────────────────────────
+async function renderAllocations(){
+  exportBtns();
+  const [suppliers,allocs,dash]=await Promise.all([api('/api/suppliers'),api('/api/allocations'),api('/api/dashboard')]);
+  if(!suppliers||!allocs||!dash) return;
+  if(ROLE==='admin'){
+    document.getElementById('top-actions').innerHTML=`
+      <button class="btn btn-alloc btn-sm" onclick="showAddAllocation()">➕ New</button>
+      ${document.getElementById('top-actions').innerHTML}`;
+  }
+  const supOpts=`<option value="">All Suppliers</option>`+suppliers.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  const cards=dash.suppliers.map(s=>{
+    const pct=s.total_allocated>0?(s.used/s.total_allocated*100).toFixed(0):0;
+    const sAllocs=allocs.filter(a=>a.supplier_id===s.id);
+    const lastAlloc=sAllocs[0];
+    return `<div class="tc" style="cursor:pointer" onclick="viewSupplierAllocations(${s.id},'${s.name.replace(/'/g,"\\'") }')">
+      <h4>${s.name}</h4>
+      <div class="tr-row"><span class="tl">💰 Allocated</span><span class="tv" style="color:#27ae60">${fmt(s.total_allocated)}</span></div>
+      <div class="tr-row"><span class="tl">📤 Used</span><span class="tv" style="color:#c0392b">${fmt(s.used)}</span></div>
+      <div class="tr-row"><span class="tl">✅ Balance</span><span class="tv" style="color:${s.balance>=0?'#27ae60':'#e74c3c'}">${fmt(s.balance)}</span></div>
+      <div class="tr-row"><span class="tl">📋 Payments</span><span class="tv">${sAllocs.length}</span></div>
+      <div class="tr-row"><span class="tl">🗓 Last Date</span><span class="tv">${lastAlloc?lastAlloc.date:'—'}</span></div>
+      <div class="pw" style="margin-top:8px"><div class="pb ${s.status==='OK'?'pb-ok':s.status==='LOW'?'pb-low':'pb-critical'}" style="width:${Math.min(pct,100)}%"></div></div>
+      <div style="font-size:10px;color:#aaa;margin-top:3px">${pct}% used · tap for history</div>
+    </div>`;
+  }).join('');
+  const allocRows=allocs.map(a=>`<tr>
+    <td>${a.date}</td><td><strong>${a.supplier_name}</strong></td>
+    <td class="num" style="color:#27ae60;font-weight:700">${fmt(a.amount)}</td>
+    <td style="color:#888;max-width:120px;overflow:hidden;text-overflow:ellipsis">${a.notes||'—'}</td>
+    <td style="color:#aaa;font-size:10px">${(a.created_at||'').split('T')[0]||a.created_at||'—'}</td>
+    ${ROLE==='admin'?`<td style="display:flex;gap:4px">
+      <button class="btn btn-warning btn-xs" onclick="editAllocation(${a.id},'${a.supplier_name.replace(/'/g,"\\'")}',${a.amount},'${a.date}','${(a.notes||'').replace(/'/g,"\\'")}')">✏️</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteAllocation(${a.id})">🗑</button>
+    </td>`:''}
+  </tr>`).join('');
+  document.getElementById('content').innerHTML=`
+    <div class="card"><div class="ct">📊 Overview — tap card for history</div><div class="tg">${cards}</div></div>
+    <div class="card">
+      <div class="ct">💰 All Allocation Records
+        <select id="alloc-filter" onchange="filterAllocTable()" style="min-width:150px;font-size:12px;padding:5px 8px">${supOpts}</select>
+      </div>
+      <div class="tw">
+        <table class="alloc-tbl">
+          <thead><tr><th>Date</th><th>Supplier</th><th>Amount</th><th>Notes</th><th>Recorded</th>${ROLE==='admin'?'<th></th>':''}</tr></thead>
+          <tbody id="alloc-tbody">${allocRows||'<tr><td colspan="6" style="text-align:center;color:#aaa;padding:16px">No allocations yet</td></tr>'}</tbody>
+        </table>
+      </div>
+      <div style="text-align:right;font-size:11px;color:#555;margin-top:6px" id="alloc-sum">
+        Total: <strong style="color:#27ae60">${fmt(allocs.reduce((a,r)=>a+r.amount,0))}</strong> · ${allocs.length} records
+      </div>
+    </div>`;
+  window._allAllocs=allocs;
+}
+
+function filterAllocTable(){
+  const sid=document.getElementById('alloc-filter')?.value;
+  const filtered=sid?window._allAllocs.filter(a=>a.supplier_id==sid):window._allAllocs;
+  const rows=filtered.map(a=>`<tr>
+    <td>${a.date}</td><td><strong>${a.supplier_name}</strong></td>
+    <td class="num" style="color:#27ae60;font-weight:700">${fmt(a.amount)}</td>
+    <td style="color:#888">${a.notes||'—'}</td>
+    <td style="color:#aaa;font-size:10px">${(a.created_at||'').split('T')[0]||'—'}</td>
+    ${ROLE==='admin'?`<td style="display:flex;gap:4px">
+      <button class="btn btn-warning btn-xs" onclick="editAllocation(${a.id},'${a.supplier_name.replace(/'/g,"\\'")}',${a.amount},'${a.date}','${(a.notes||'').replace(/'/g,"\\'")}')">✏️</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteAllocation(${a.id})">🗑</button>
+    </td>`:''}
+  </tr>`).join('');
+  const tb=document.getElementById('alloc-tbody');
+  if(tb) tb.innerHTML=rows||'<tr><td colspan="6" style="text-align:center;color:#aaa;padding:14px">No records</td></tr>';
+  const total=filtered.reduce((a,r)=>a+r.amount,0);
+  const s=document.getElementById('alloc-sum');
+  if(s) s.innerHTML=`Total: <strong style="color:#27ae60">${fmt(total)}</strong> · ${filtered.length} records`;
+}
+
+function showAddAllocation(prefillSid=null){
+  api('/api/suppliers').then(suppliers=>{
+    if(!suppliers) return;
+    const supOpts=suppliers.map(s=>`<option value="${s.id}" ${s.id==prefillSid?'selected':''}>${s.name}</option>`).join('');
+    openModal(`<h3>💰 New Money Allocation</h3>
+      <div class="form-grid">
+        <div class="fg full"><label>Supplier *</label><select id="m-sid">${supOpts}</select></div>
+        <div class="fg"><label>Date *</label><input id="m-date" value="${today()}"></div>
+        <div class="fg"><label>Amount *</label><input type="number" id="m-amount" placeholder="e.g. 50000000"></div>
+        <div class="fg full"><label>Notes <span class="opt">(optional)</span></label>
+          <input id="m-notes" placeholder="e.g. Second installment, ref #1234"></div>
+      </div>
+      <div style="background:#EBF3FB;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:#555">
+        💡 Amount adds to supplier's total allocation. Balance updates automatically.
+      </div>
+      <div class="mf">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-alloc" onclick="saveAllocation()">💾 Save</button>
+      </div>`);
+  });
+}
+
+async function saveAllocation(){
+  const sid=document.getElementById('m-sid')?.value;
+  const date=document.getElementById('m-date')?.value;
+  const amount=document.getElementById('m-amount')?.value;
+  const notes=document.getElementById('m-notes')?.value;
+  if(!sid||!amount||parseFloat(amount)<=0){toast('Select supplier and enter amount','err');return;}
+  const r=await api('/api/allocations',{method:'POST',body:JSON.stringify({supplier_id:sid,date,amount,notes})});
+  if(r?.success){toast('✅ Allocation saved!','ok');closeModal();go('allocations');}
+  else toast(r?.error||'Error','err');
+}
+
+function editAllocation(id,name,amount,date,notes){
+  openModal(`<h3>✏️ Edit — ${name}</h3>
+    <div class="form-grid">
+      <div class="fg"><label>Date</label><input id="m-date" value="${date}"></div>
+      <div class="fg"><label>Amount</label><input type="number" id="m-amount" value="${amount}"></div>
+      <div class="fg full"><label>Notes</label><input id="m-notes" value="${notes}"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteAllocation(${id})">🗑</button>
+      <button class="btn btn-alloc" onclick="updateAllocation(${id})">💾 Save</button>
+    </div>`);
+}
+
+async function updateAllocation(id){
+  const date=document.getElementById('m-date')?.value;
+  const amount=document.getElementById('m-amount')?.value;
+  const notes=document.getElementById('m-notes')?.value;
+  if(!amount||parseFloat(amount)<=0){toast('Enter valid amount','err');return;}
+  const r=await api(`/api/allocations/${id}`,{method:'PUT',body:JSON.stringify({date,amount,notes})});
+  if(r?.success){toast('✅ Updated','ok');closeModal();go('allocations');}
+  else toast('Error','err');
+}
+
+async function deleteAllocation(id){
+  if(!confirm('Delete this allocation? This reduces the supplier total.')) return;
+  const r=await api(`/api/allocations/${id}`,{method:'DELETE'});
+  if(r?.success){toast('Deleted','ok');closeModal();go('allocations');}
+  else toast('Error','err');
+}
+
+async function viewSupplierAllocations(sid,name){
+  const [allocs,dash]=await Promise.all([api(`/api/suppliers/${sid}/allocations`),api('/api/dashboard')]);
+  const s=dash?.suppliers?.find(x=>x.id===sid);
+  if(!allocs||!s) return;
+  const timeline=allocs.map(a=>`
+    <div class="alloc-item">
+      <div class="alloc-dot">💰</div>
+      <div class="alloc-body">
+        <div class="alloc-date">📅 ${a.date}</div>
+        <div class="alloc-amount">+ ${fmt(a.amount)}</div>
+        ${a.notes?`<div class="alloc-notes">📝 ${a.notes}</div>`:''}
+        <div class="alloc-running">Running total: ${fmt(a.running_total)}</div>
+      </div>
+      ${ROLE==='admin'?`<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+        <button class="btn btn-warning btn-xs" onclick="editAllocation(${a.id},'${name.replace(/'/g,"\\'")}',${a.amount},'${a.date}','${(a.notes||'').replace(/'/g,"\\'")}')">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteAllocation(${a.id})">🗑</button>
+      </div>`:''}
+    </div>`).join('');
+  openModal(`<h3>💰 ${name}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:#d4edda;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:#555">Allocated</div>
+        <div style="font-size:14px;font-weight:800;color:#27ae60">${fmt(s.total_allocated)}</div></div>
+      <div style="background:#fde8e8;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:#555">Used</div>
+        <div style="font-size:14px;font-weight:800;color:#c0392b">${fmt(s.used)}</div></div>
+      <div style="background:#EBF3FB;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:#555">Balance</div>
+        <div style="font-size:14px;font-weight:800;color:${s.balance>=0?'#1F4E79':'#e74c3c'}">${fmt(s.balance)}</div></div>
+    </div>
+    ${statusBadge(s.status)}<span style="font-size:11px;color:#888;margin-left:8px">${allocs.length} payments · ${s.pct}% used</span>
+    <div class="pw" style="margin:8px 0 14px"><div class="pb ${s.status==='OK'?'pb-ok':s.status==='LOW'?'pb-low':'pb-critical'}" style="width:${Math.min(s.total_allocated>0?(s.used/s.total_allocated*100):0,100)}%"></div></div>
+    <div style="max-height:320px;overflow-y:auto;border:1px solid #f0f0f0;border-radius:9px;padding:0 12px">
+      ${timeline||'<p style="text-align:center;color:#aaa;padding:20px">No allocations yet</p>'}
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      ${ROLE==='admin'?`<button class="btn btn-alloc" onclick="closeModal();showAddAllocation(${sid})">➕ Add Payment</button>`:''}
+    </div>`);
+}
+
+// ── SUPPLIERS ─────────────────────────────────────────────────────────────────
+async function renderSuppliers(){
+  const d=await api('/api/dashboard');if(!d) return;
+  if(ROLE==='admin') document.getElementById('top-actions').innerHTML=
+    `<button class="btn btn-success btn-sm" onclick="showAddSupplier()">➕ Add</button>`;
+  const rows=d.suppliers.map(s=>{
+    const pct=s.total_allocated>0?(s.used/s.total_allocated*100):0;
+    const pbC=s.status==='OK'?'pb-ok':s.status==='LOW'?'pb-low':'pb-critical';
+    return `<tr>
+      <td><strong>${s.name}</strong></td>
+      <td class="num">${fmt(s.total_allocated)}</td>
+      <td class="num">${fmt(s.used)}</td>
+      <td class="num" style="color:${s.balance>=0?'#27ae60':'#e74c3c'};font-weight:700">${fmt(s.balance)}</td>
+      <td>${s.count_in}k / <span style="color:#e74c3c">${s.count_out}s</span></td>
+      <td>${statusBadge(s.status)}<div class="pw"><div class="pb ${pbC}" style="width:${Math.min(pct,100)}%"></div></div></td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-xs" onclick="viewSupplier(${s.id},'${s.name.replace(/'/g,"\\'")}')">👁</button>
+          ${ROLE==='admin'?`
+          <button class="btn btn-alloc btn-xs" onclick="showAddAllocation(${s.id})">💰</button>
+          <button class="btn btn-primary btn-xs" onclick="viewSupplierAllocations(${s.id},'${s.name.replace(/'/g,"\\'")}')">📋</button>
+          <button class="btn btn-danger btn-xs" onclick="confirmDeleteSupplier(${s.id},'${s.name.replace(/'/g,"\\'")}')">🗑</button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('content').innerHTML=`
+    ${ROLE!=='admin'?'<div class="vn">👁 Read-only access.</div>':''}
+    <div class="card"><div class="tw"><table>
+      <thead><tr><th>Supplier</th><th>Allocated</th><th>Used</th><th>Balance</th><th>Trucks</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div></div>`;
+}
+
+// ── DELETE SUPPLIER (with confirmation + force option) ─────────────────────
+async function confirmDeleteSupplier(id, name){
+  // First try a soft check
+  const r = await api(`/api/suppliers/${id}`, {method:'DELETE'});
+  if(r?.success){
+    toast(`✅ ${name} deleted`,'ok');
+    renderSuppliers();
+    return;
+  }
+  if(r?.has_data){
+    // Has data — show warning modal
+    openModal(`<h3>🗑 Delete Supplier</h3>
+      <div class="danger-box">
+        <strong>⚠️ This supplier has existing data:</strong>
+        • ${r.del_count} delivery entries<br>
+        • ${r.alloc_count} allocation records<br><br>
+        Deleting will permanently remove ALL of this data.
+      </div>
+      <p style="font-size:13px;color:#555;margin-bottom:14px">Are you sure you want to delete <strong>${name}</strong> and all their records?</p>
+      <div class="mf">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="forceDeleteSupplier(${id},'${name.replace(/'/g,"\\'")}')">🗑 Yes, Delete Everything</button>
+      </div>`);
+  } else {
+    toast(r?.error||'Error deleting','err');
+  }
+}
+
+async function forceDeleteSupplier(id, name){
+  const r = await api(`/api/suppliers/${id}?force=1`, {method:'DELETE'});
+  if(r?.success){
+    toast(`✅ ${name} and all data deleted`,'ok');
+    closeModal();
+    renderSuppliers();
+  } else {
+    toast(r?.error||'Error','err');
+  }
+}
+
+function showAddSupplier(){
+  openModal(`<h3>➕ Add New Supplier</h3>
+    <div class="form-grid">
+      <div class="fg full"><label>Supplier Name *</label><input id="m-name" placeholder="e.g. BAKARY CAMARA" style="text-transform:uppercase"></div>
+      <div class="section-divider"><span>Initial Allocation (optional)</span></div>
+      <div class="fg"><label>Date</label><input id="m-idate" value="${today()}"></div>
+      <div class="fg"><label>Amount</label><input type="number" id="m-iamt" placeholder="e.g. 150000000"></div>
+      <div class="fg full"><label>Notes</label><input id="m-inotes" placeholder="e.g. Initial budget"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success" onclick="addSupplier()">✅ Add</button>
+    </div>`);
+}
+
+async function addSupplier(){
+  const name=document.getElementById('m-name')?.value.trim().toUpperCase();
+  if(!name){toast('Enter supplier name','err');return;}
+  const body={name,initial_amount:document.getElementById('m-iamt')?.value,
+    initial_date:document.getElementById('m-idate')?.value,
+    initial_notes:document.getElementById('m-inotes')?.value};
+  const r=await api('/api/suppliers',{method:'POST',body:JSON.stringify(body)});
+  if(r?.success){toast(`✅ ${name} added`,'ok');closeModal();renderSuppliers();}
+  else toast(r?.error||'Error','err');
+}
+
+async function viewSupplier(id,name){
+  const [deliveries,dash]=await Promise.all([api(`/api/deliveries?supplier_id=${id}`),api('/api/dashboard')]);
+  const s=dash?.suppliers?.find(x=>x.id===id);if(!s||!deliveries) return;
+  let run=0;const rv=[];[...deliveries].reverse().forEach(e=>{run+=e.amount||0;rv.unshift(run);});
+  const rows=deliveries.map((e,i)=>`<tr>
+    <td>${e.date}</td><td>${e.truck}</td>
+    <td class="num">${fmtN(e.net_weight)}</td>
+    <td class="num"><strong>${fmtN(e.amount)}</strong></td>
+    <td class="num">${fmt(rv[i])}</td>
+    <td>${e.sold_outside?'<span class="st tag-sold">🏷</span>':'<span class="st tag-kept">🏠</span>'}</td>
+    ${ROLE==='admin'?`<td><button class="btn btn-warning btn-xs" onclick="openEditModal(${e.id})">✏️</button></td>`:''}
+  </tr>`).join('');
+  openModal(`<h3>📋 ${name}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="background:#d4edda;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:#555">Allocated</div>
+        <div style="font-size:14px;font-weight:800;color:#27ae60">${fmt(s.total_allocated)}</div></div>
+      <div style="background:#fde8e8;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:#555">Used</div>
+        <div style="font-size:14px;font-weight:800;color:#c0392b">${fmt(s.used)}</div></div>
+      <div style="background:#EBF3FB;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:10px;color:#555">Balance</div>
+        <div style="font-size:14px;font-weight:800;color:${s.balance>=0?'#1F4E79':'#e74c3c'}">${fmt(s.balance)}</div></div>
+    </div>
+    ${statusBadge(s.status)}<span style="font-size:11px;color:#888;margin-left:8px">${s.count_in} kept, ${s.count_out} sold</span>
+    <div class="tw" style="max-height:280px;overflow-y:auto;margin-top:12px"><table>
+      <thead><tr><th>Date</th><th>Truck</th><th>Net Wt</th><th>Amount</th><th>Running</th><th>Status</th>${ROLE==='admin'?'<th></th>':''}</tr></thead>
+      <tbody>${rows||'<tr><td colspan="7" style="text-align:center;color:#aaa;padding:14px">No entries</td></tr>'}</tbody>
+    </table></div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary btn-sm" onclick="closeModal();viewSupplierAllocations(${id},'${name.replace(/'/g,"\\'")}')">💰 History</button>
+      ${ROLE==='admin'?`<button class="btn btn-alloc btn-sm" onclick="closeModal();showAddAllocation(${id})">➕ Allocate</button>`:''}
+    </div>`);
+}
+
+// ── USERS ─────────────────────────────────────────────────────────────────────
+async function renderUsers(){
+  if(ROLE!=='admin'){document.getElementById('content').innerHTML='<div class="vn">🔒 Admin only.</div>';return;}
+  document.getElementById('top-actions').innerHTML=`<button class="btn btn-success btn-sm" onclick="showAddUser()">➕ Add</button>`;
+  const users=await api('/api/users');if(!users) return;
+  document.getElementById('content').innerHTML=`
+    <div class="card"><div class="ct">🔐 System Users</div>
+      <div class="tw"><table>
+        <thead><tr><th>Username</th><th>Role</th><th>Created</th><th></th></tr></thead>
+        <tbody>${users.map(u=>`<tr>
+          <td><strong>${u.username}</strong></td>
+          <td><span class="badge ${u.role==='admin'?'b-admin':'b-viewer'}">${u.role}</span></td>
+          <td style="color:#aaa;font-size:11px">${(u.created_at||'').split('T')[0]}</td>
+          <td><button class="btn btn-danger btn-xs" onclick="deleteUser(${u.id},'${u.username}')">🗑</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+    <div class="card"><div class="ct">ℹ️ Permissions</div>
+      <table style="min-width:unset"><thead><tr><th>Action</th><th>Admin</th><th>Viewer</th></tr></thead>
+      <tbody>
+        <tr><td>View & export</td><td>✅</td><td>✅</td></tr>
+        <tr><td>Add / edit entries</td><td>✅</td><td>❌</td></tr>
+        <tr><td>Allocate money</td><td>✅</td><td>❌</td></tr>
+        <tr><td>Add / delete suppliers</td><td>✅</td><td>❌</td></tr>
+        <tr><td>Manage users</td><td>✅</td><td>❌</td></tr>
+      </tbody></table>
+    </div>`;
+}
+
+function showAddUser(){
+  openModal(`<h3>➕ New User</h3>
+    <div class="form-grid">
+      <div class="fg full"><label>Username *</label><input id="m-un" placeholder="e.g. malan_viewer"></div>
+      <div class="fg full"><label>Password *</label><input type="password" id="m-upw" placeholder="Min 6 chars"></div>
+      <div class="fg full"><label>Role</label><select id="m-ur"><option value="viewer">👁 Viewer</option><option value="admin">🔐 Admin</option></select></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success" onclick="addUser()">✅ Create</button>
+    </div>`);
+}
+
+async function addUser(){
+  const u=document.getElementById('m-un')?.value.trim(),pw=document.getElementById('m-upw')?.value,role=document.getElementById('m-ur')?.value;
+  if(!u||!pw){toast('Username & password required','err');return;}
+  if(pw.length<6){toast('Password min 6 chars','err');return;}
+  const r=await api('/api/users',{method:'POST',body:JSON.stringify({username:u,password:pw,role})});
+  if(r?.success){toast(`✅ ${u} created`,'ok');closeModal();renderUsers();}
+  else toast(r?.error||'Error','err');
+}
+
+async function deleteUser(id,name){
+  if(!confirm(`Remove "${name}"?`)) return;
+  const r=await api(`/api/users/${id}`,{method:'DELETE'});
+  if(r?.success){toast('Removed','ok');renderUsers();}
+  else toast(r?.error||'Error','err');
+}
+</script>
+</body>
+</html>
