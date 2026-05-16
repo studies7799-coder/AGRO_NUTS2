@@ -5,7 +5,8 @@ from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "agro_nuts_2026_secret_key_change_in_production"
-DB = "agro_nuts_v2.db"
+import os
+DATABASE_URL = "postgresql://data_stored_user:QCIcCV25kh8VgDA0ibtVVbR3AjnZtsu1@dpg-d84dcmgjs32c739ph0vg-a/data_stored"
 
 # ── DB ─────────────────────────────────────────────────────────────────────────
 def get_db():
